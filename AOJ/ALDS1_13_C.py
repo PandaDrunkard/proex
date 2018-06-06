@@ -35,37 +35,41 @@ from sys import stdin
 def stdinput():
     return stdin.readline().strip()
 
-MAX_ITER = 45
+MAX_ITER = 20
+DIRECTIONS = [(0, 1), (0, -1), (1, 0), (-1, 0)]
 def shortest_steps(p, iter, cache):
     key = ' '.join(p.state)
-    if key in cache and cache[key] < 10**3:
-        return cache[key]
-    elif p.is_completed():
+    if p.is_completed():
         return 0
     else:
         if iter == MAX_ITER:
             return 10**3
         else:
-            steps = 10**3
+            min_next_steps = 10**3
             next_iter = iter + 1
-            for c in list_canditee(p):
-                s = shortest_steps(c, next_iter, cache)
-                if s < steps:
-                    steps = s
-            steps += 1
-            cache[key] = steps
+            if key in cache:
+                this_cache = cache[key]
+            else:
+                this_cache = {}
+                cache[key] = this_cache
+            
+            for dd in DIRECTIONS:
+                if dd in this_cache and this_cache[dd] < 10**3:
+                    next_steps = this_cache[dd]
+                else:
+                    next_x = p.x + dd[0]
+                    next_y = p.y + dd[1]
+                    if 0 <= next_x and next_x < p.WIDTH and 0 <= next_y and next_y < p.HIGHT:
+                        next_p = Puzzle(list(p.state))
+                        next_p.swap(next_x, next_y)
+                        next_steps = shortest_steps(next_p, next_iter, cache)
+                        this_cache[dd] = next_steps
+                    else:
+                        next_steps = 10**3
+                if next_steps < min_next_steps:
+                    min_next_steps = next_steps
+            steps = min_next_steps + 1
             return steps
-
-def list_canditee(p):
-    canditees = []
-    for dx, dy in [(0, 1), (0, -1), (1, 0), (-1, 0)]:
-        next_x = p.x + dx
-        next_y = p.y + dy
-        if 0 <= next_x and next_x < p.WIDTH and 0 <= next_y and next_y < p.HIGHT:
-            next_p = Puzzle(list(p.state))
-            next_p.swap(next_x, next_y)
-            canditees.append(next_p)
-    return canditees
 
 def main():
     puzzle = Puzzle(stdinput().split() + stdinput().split() +stdinput().split() +stdinput().split())
